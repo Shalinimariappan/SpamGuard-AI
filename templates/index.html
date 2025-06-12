@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" class="transition duration-300">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpamGuard AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    };
+  </script>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen transition duration-300">
+
+  <!-- Toggle + Header -->
+  <div class="max-w-4xl mx-auto px-6 py-8">
+    <div class="flex justify-between items-center">
+      <h1 class="text-4xl font-extrabold text-red-600 dark:text-red-400">🚨 SpamGuard AI</h1>
+      <button onclick="toggleMode()" class="bg-gray-300 dark:bg-gray-700 text-sm px-4 py-2 rounded shadow hover:bg-gray-400 dark:hover:bg-gray-600 transition">
+        🌙/☀️ Toggle Theme
+      </button>
+    </div>
+    <p class="text-gray-500 dark:text-gray-300 mt-2">Your AI-powered shield for detecting and handling spam.</p>
+  </div>
+
+  <!-- Form Section -->
+  <div class="max-w-4xl mx-auto px-6">
+    <form method="POST" class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl">
+      <textarea id="voiceInput" name="user_input" rows="6"
+        class="w-full p-4 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-400 focus:outline-none transition resize-none"
+        placeholder="Paste or speak your suspicious message here..."></textarea>
+
+      <div class="flex flex-wrap gap-4 justify-between mt-6">
+        <button class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition">🔍 Analyze</button>
+        <button type="reset" class="bg-gray-300 dark:bg-gray-600 text-black dark:text-white px-6 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-500 transition">🧹 Clear</button>
+        <button type="button" onclick="startListening()" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition">🎙️ Speak</button>
+      </div>
+    </form>
+
+    {% if result %}
+    <!-- Result Section -->
+    <div class="mt-10 space-y-6 bg-gradient-to-tr from-red-100 to-white dark:from-gray-800 dark:to-gray-900 p-8 rounded-2xl shadow-xl">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <div>
+          <h2 class="text-2xl font-bold text-red-500 dark:text-red-300">📊 Spam Analysis</h2>
+          <p><strong>Language:</strong> {{ result.lang }}</p>
+          <p><strong>Translated:</strong> {{ result.translated }}</p>
+          <p><strong>Spam Type:</strong> <span class="text-yellow-500 font-semibold">{{ result.type }}</span></p>
+        </div>
+        <div class="mt-6 md:mt-0 w-full md:w-1/2">
+          <div class="text-sm font-medium">Spam Score</div>
+          <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-4 mt-1">
+            <div class="bg-red-600 h-4 rounded-full transition-all duration-500" style="width: {{ result.score }}%;"></div>
+          </div>
+          <p class="text-xs mt-1 text-gray-500">⚠️ Higher score indicates higher spam risk.</p>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-lg font-semibold">💬 Suggested Reply</h3>
+        <div class="relative bg-gray-100 dark:bg-gray-700 text-black dark:text-white p-4 rounded-lg mt-2">
+          <code id="replyText">{{ result.reply }}</code>
+          <button onclick="copyReply()" class="absolute top-2 right-2 text-xs text-blue-600 dark:text-blue-400 hover:underline">📋 Copy</button>
+        </div>
+      </div>
+
+      <form method="POST" action="/download_pdf">
+        <input type="hidden" name="pdf_content"
+          value="Spam Analysis\nLanguage: {{ result.lang }}\nTranslated: {{ result.translated }}\nSpam Type: {{ result.type }}\nScore: {{ result.score }}%\nSuggested Reply: {{ result.reply }}">
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition">📄 Download PDF</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Spam Tip Generator -->
+    <div class="mt-12 text-center">
+      <h3 class="text-xl font-bold mb-2 text-yellow-500">💡 Daily Spam Tip</h3>
+      <div id="tipBox" class="inline-block bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 p-4 rounded-lg shadow">
+        Always verify the sender’s email or number — even if it appears familiar.
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="mt-16 text-center text-xs text-gray-400 dark:text-gray-500">
+    ✨ Created by Shalini | SpamGuard AI
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    function toggleMode() {
+      document.documentElement.classList.toggle("dark");
+    }
+
+    function startListening() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = function (event) {
+        document.getElementById('voiceInput').value = event.results[0][0].transcript;
+      };
+      recognition.start();
+    }
+
+    function copyReply() {
+      const replyText = document.getElementById("replyText").innerText;
+      navigator.clipboard.writeText(replyText);
+      alert("Reply copied to clipboard!");
+    }
+  </script>
+
+</body>
+</html>
